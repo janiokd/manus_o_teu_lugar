@@ -22,6 +22,7 @@ export type IProduct = {
   contactMethod: string;
   privacyPolicy: boolean;
   rentalDuration: number;
+  images?: string[];
 };
 
 // ----------------------------------------------------------------------
