@@ -152,7 +152,15 @@ export default function AdvertisePage() {
   const onSubmit = async (form: FormValuesProps) => {
     try {
       console.log('formData:', form);
-      await dispatch(registerProduct({ ...form, features: { ...values.features[values.type] } }));
+      
+      // Convert CustomFile to string for images
+      const processedForm = {
+        ...form,
+        images: form.images?.map(img => typeof img === 'string' ? img : img.preview || '') || [],
+        features: { ...values.features[values.type] }
+      };
+      
+      await dispatch(registerProduct(processedForm));
       reset();
       enqueueSnackbar('Create success!');
       push('/');
