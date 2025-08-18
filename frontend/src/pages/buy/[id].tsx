@@ -87,7 +87,21 @@ export default function PropertyDetailPage() {
       }
       
       const propertyData = await response.json();
-      setProperty(propertyData);
+      
+      // Normalizar dados para compatibilidade
+      const normalizedProperty = {
+        ...propertyData,
+        // Garantir que price seja string
+        price: propertyData.price?.toString() || '0',
+        // Garantir que features existe
+        features: propertyData.features || {},
+        // Garantir que type existe
+        type: propertyData.type || 'Imóvel',
+        // Garantir que description existe
+        description: propertyData.description || 'Descrição não disponível',
+      };
+      
+      setProperty(normalizedProperty);
     } catch (err) {
       console.error('Erro ao carregar imóvel:', err);
       setError('Erro ao carregar dados do imóvel');

@@ -54,15 +54,11 @@ export default function EstateCard({ height, product }: EstateCardProps) {
   const { t } = useLocales();
   const carouselRef = useRef<Carousel | null>(null);
 
-  const handlePrev = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    e?.preventDefault();
+  const handlePrev = () => {
     carouselRef.current?.slickPrev();
   };
 
-  const handleNext = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    e?.preventDefault();
+  const handleNext = () => {
     carouselRef.current?.slickNext();
   };
 
@@ -120,13 +116,60 @@ export default function EstateCard({ height, product }: EstateCardProps) {
             height: height || '250px',
           }}
         >
-          <CarouselArrows filled shape="rounded" onNext={handleNext} onPrevious={handlePrev}>
-            <Carousel ref={carouselRef} {...carouselSettings} arrows>
-              {finalList.map((item) => (
-                <CarouselItem key={item.id} item={item} height={height} product={product} />
-              ))}
-            </Carousel>
-          </CarouselArrows>
+          <Carousel ref={carouselRef} {...carouselSettings}>
+            {finalList.map((item) => (
+              <CarouselItem key={item.id} item={item} height={height} product={product} />
+            ))}
+          </Carousel>
+          
+          {/* Setas do carrossel posicionadas absolutamente */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: 16,
+              transform: 'translateY(-50%)',
+              zIndex: 1000,
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              borderRadius: '50%',
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(0,0,0,0.5)',
+              },
+            }}
+            onClick={handlePrev}
+          >
+            <Typography color="white">‹</Typography>
+          </Box>
+          
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              right: 16,
+              transform: 'translateY(-50%)',
+              zIndex: 1000,
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              borderRadius: '50%',
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(0,0,0,0.5)',
+              },
+            }}
+            onClick={handleNext}
+          >
+            <Typography color="white">›</Typography>
+          </Box>
         </Box>
 
         <Stack direction="row" spacing={1} sx={{ position: 'absolute', top: 10, left: 10 }}>
