@@ -101,7 +101,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (access_token && isValidToken(access_token)) {
         setSession(access_token);
 
-        const response = await axios.post(`${HOST_API}/user/authenticatewithtoken`, {
+        const response = await axios.post(`${HOST_API}/api/user/authenticatewithtoken`, {
           access_token,
         });
 
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // LOGIN
   const login = useCallback(async (email: string, password: string) => {
-    const response = await axios.post(`${HOST_API}/user/authenticate`, {
+    const response = await axios.post(`${HOST_API}/api/user/authenticate`, {
       email,
       password,
     });
@@ -169,7 +169,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       password: string,
       phoneNumber: string
     ) => {
-      const response = await axios.post(`${HOST_API}/user/register`, {
+      const response = await axios.post(`${HOST_API}/api/user/register`, {
         type,
         name,
         email,
