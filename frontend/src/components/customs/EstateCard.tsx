@@ -63,18 +63,30 @@ export default function EstateCard({ height, product }: EstateCardProps) {
   };
 
   const list = product.images && product.images.length > 0 
-    ? product.images.map((imageUrl: string, index: number) => ({
-        id: index.toString(),
-        name: product.title || 'Imóvel',
-        image: imageUrl,
-      }))
-    : [
-        {
-          id: '1',
+    ? product.images
+        .filter((imageUrl: string) => {
+          // Filtrar URLs válidas (não blob: e não vazias)
+          return imageUrl && 
+                 typeof imageUrl === 'string' && 
+                 imageUrl.trim() !== '' &&
+                 !imageUrl.startsWith('blob:') &&
+                 (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'));
+        })
+        .map((imageUrl: string, index: number) => ({
+          id: index.toString(),
           name: product.title || 'Imóvel',
-          image: img.src, // Imagem padrão se não houver imagens
-        },
-      ];
+          image: imageUrl,
+        }))
+    : [];
+
+  // Se não há imagens válidas, usar imagem padrão
+  const finalList = list.length > 0 ? list : [
+    {
+      id: '1',
+      name: product.title || 'Imóvel',
+      image: img.src, // Imagem padrão se não houver imagens válidas
+    },
+  ];
 
   const carouselSettings = {
     speed: 1000,
@@ -97,23 +109,21 @@ export default function EstateCard({ height, product }: EstateCardProps) {
   return (
     <Box sx={{ bgcolor: 'common.white', borderRadius: '10px', p: 1.25, color: '#454545' }}>
       <Box sx={{ position: 'relative' }}>
-        <Link href={PATH_PAGE.buy}>
-          <Box
-            sx={{
-              overflow: 'hidden',
-              borderRadius: '15px',
-              height: height || '250px',
-            }}
-          >
-            <CarouselArrows filled shape="rounded" onNext={handleNext} onPrevious={handlePrev}>
-              <Carousel ref={carouselRef} {...carouselSettings} arrows>
-                {list.map((item) => (
-                  <CarouselItem key={item.id} item={item} height={height} />
-                ))}
-              </Carousel>
-            </CarouselArrows>
-          </Box>
-        </Link>
+        <Box
+          sx={{
+            overflow: 'hidden',
+            borderRadius: '15px',
+            height: height || '250px',
+          }}
+        >
+          <CarouselArrows filled shape="rounded" onNext={handleNext} onPrevious={handlePrev}>
+            <Carousel ref={carouselRef} {...carouselSettings} arrows>
+              {finalList.map((item) => (
+                <CarouselItem key={item.id} item={item} height={height} product={product} />
+              ))}
+            </Carousel>
+          </CarouselArrows>
+        </Box>
 
         <Stack direction="row" spacing={1} sx={{ position: 'absolute', top: 10, left: 10 }}>
           <RoundButton variant="contained" color="secondary" size="small">
@@ -206,9 +216,10 @@ export default function EstateCard({ height, product }: EstateCardProps) {
 type CarouselItemProps = {
   item: ItemProps;
   height?: number;
+  product: IProduct;
 };
 
-function CarouselItem({ item, height }: CarouselItemProps) {
+function CarouselItem({ item, height, product }: CarouselItemProps) {
   const { image, name } = item;
 
   return (
@@ -224,13 +235,16 @@ function CarouselItem({ item, height }: CarouselItemProps) {
         }}
       />
       <StyledOverlay />
-      <Image
-        alt={name}
-        src={image}
-        sx={{
-          height: height || 250,
-        }}
-      />
+      <Link href={`${PATH_PAGE.buy}/${product.id}`}>
+        <Image
+          alt={name}
+          src={image}
+          sx={{
+            height: height || 250,
+            cursor: 'pointer',
+          }}
+        />
+      </Link>
     </Box>
   );
 }
