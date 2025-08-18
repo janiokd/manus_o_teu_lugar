@@ -264,3 +264,4 @@ export default function EstateCard({ height, product }: EstateCardProps) {
   );
 }
 
+// Force rebuild Mon Aug 18 19:22:33 EDT 2025
