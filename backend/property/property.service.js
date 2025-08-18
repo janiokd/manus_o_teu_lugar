@@ -38,29 +38,44 @@ async function get(params) {
     }
   }
 
-  // Filtro por localização
+  // Filtro por localização (compatível com ambas as estruturas)
   if (params.location) {
     con.$or = [
       { address: { $regex: params.location, $options: 'i' } },
       { 'city.name': { $regex: params.location, $options: 'i' } },
       { 'state.name': { $regex: params.location, $options: 'i' } },
-      { 'neighborhood.name': { $regex: params.location, $options: 'i' } }
+      { 'neighborhood.name': { $regex: params.location, $options: 'i' } },
+      { city: { $regex: params.location, $options: 'i' } },
+      { state: { $regex: params.location, $options: 'i' } },
+      { neighborhood: { $regex: params.location, $options: 'i' } }
     ];
   }
 
-  // Filtro por cidade
-  if (params.city && params.city.name) {
-    con['city.name'] = { $regex: params.city.name, $options: 'i' };
+  // Filtro por cidade (compatível com ambas as estruturas)
+  if (params.city) {
+    const cityName = params.city.name || params.city;
+    con.$or = [
+      { 'city.name': { $regex: cityName, $options: 'i' } },
+      { city: { $regex: cityName, $options: 'i' } }
+    ];
   }
 
-  // Filtro por estado
-  if (params.state && params.state.name) {
-    con['state.name'] = { $regex: params.state.name, $options: 'i' };
+  // Filtro por estado (compatível com ambas as estruturas)
+  if (params.state) {
+    const stateName = params.state.name || params.state;
+    con.$or = [
+      { 'state.name': { $regex: stateName, $options: 'i' } },
+      { state: { $regex: stateName, $options: 'i' } }
+    ];
   }
 
-  // Filtro por bairro
-  if (params.neighborhood && params.neighborhood.name) {
-    con['neighborhood.name'] = { $regex: params.neighborhood.name, $options: 'i' };
+  // Filtro por bairro (compatível com ambas as estruturas)
+  if (params.neighborhood) {
+    const neighborhoodName = params.neighborhood.name || params.neighborhood;
+    con.$or = [
+      { 'neighborhood.name': { $regex: neighborhoodName, $options: 'i' } },
+      { neighborhood: { $regex: neighborhoodName, $options: 'i' } }
+    ];
   }
 
   // Filtro por características dos quartos
