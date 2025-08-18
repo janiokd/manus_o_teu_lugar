@@ -39,9 +39,9 @@ app.use((req, res, next) => {
 });
 
 // api routes
-app.use("/util", require("./util/util.controller"));
-app.use("/user", require("./user/user.controller"));
-app.use("/property", require("./property/property.controller"));
+app.use("/api/util", require("./util/util.controller"));
+app.use("/api/user", require("./user/user.controller"));
+app.use("/api/property", require("./property/property.controller"));
 
 // global error handler
 app.use(errorHandler);
