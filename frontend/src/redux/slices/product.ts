@@ -56,7 +56,7 @@ export function getAllProducts() {
   return async (dispatch: Dispatch) => {
     dispatch(slice.actions.startLoading());
     try {
-      const response = await axios.get(`${HOST_API}/property`);
+      const response = await axios.get(`${HOST_API}/api/property`);
       dispatch(slice.actions.getProductsSuccess(response.data));
     } catch (error) {
       dispatch(slice.actions.hasError(error));
@@ -87,7 +87,7 @@ export function getProducts(params: any) {
 
       console.log('Sending search params:', searchParams);
 
-      const response = await axios.get(`${HOST_API}/property/get`, {
+      const response = await axios.get(`${HOST_API}/api/property/get`, {
         params: searchParams,
       });
       dispatch(slice.actions.getProductsSuccess(response.data));
@@ -104,7 +104,7 @@ export function getProduct(id: string) {
   return async (dispatch: Dispatch) => {
     dispatch(slice.actions.startLoading());
     try {
-      const response = await axios.get(`${HOST_API}/property`, {
+      const response = await axios.get(`${HOST_API}/api/property`, {
         params: { id },
       });
       dispatch(slice.actions.getProductSuccess(response.data.product));
@@ -121,7 +121,7 @@ export function registerProduct(product: IProduct) {
   return async (dispatch: Dispatch) => {
     dispatch(slice.actions.startLoading());
     try {
-      const response = await axios.post(`${HOST_API}/property/register`, {
+      const response = await axios.post(`${HOST_API}/api/property/register`, {
         ...product,
       });
       dispatch(slice.actions.getProductSuccess(response.data.product));
