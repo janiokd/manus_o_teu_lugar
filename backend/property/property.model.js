@@ -24,6 +24,8 @@ const schema = new Schema({
   privacyPolicy: { type: Boolean },
   rentalDuration: { type: Number },
   images: { type: Array, default: [] }, // Array de URLs das imagens
+  latitude: { type: Number }, // Latitude para localização no mapa
+  longitude: { type: Number }, // Longitude para localização no mapa
   createdDate: { type: Date, default: Date.now },
 });
 

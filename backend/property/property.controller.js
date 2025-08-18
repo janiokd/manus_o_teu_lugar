@@ -6,6 +6,7 @@ const propertyService = require('./property.service');
 router.post('/register', register);
 router.get('/', getAll);
 router.get('/get', get);
+router.get('/map-data', getMapData);
 router.get('/current', getCurrent);
 router.get('/:id', getById);
 router.put('/:id', update);
@@ -30,6 +31,27 @@ function getAll(req, res, next) {
 function get(req, res, next) {
     propertyService.get(req.query)
         .then(propertys => res.json(propertys))
+        .catch(err => next(err));
+}
+
+function getMapData(req, res, next) {
+    propertyService.getAll()
+        .then(properties => {
+            // Filtrar apenas propriedades com coordenadas válidas
+            const mapData = properties
+                .filter(property => property.latitude && property.longitude)
+                .map(property => ({
+                    id: property.id,
+                    title: property.title,
+                    price: property.price,
+                    address: property.address,
+                    latitude: property.latitude,
+                    longitude: property.longitude,
+                    type: property.type,
+                    neighborhood: property.neighborhood
+                }));
+            res.json(mapData);
+        })
         .catch(err => next(err));
 }
 

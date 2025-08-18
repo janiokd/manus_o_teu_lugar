@@ -14,8 +14,8 @@ import MapIcon from 'src/assets/icons/MapIcon';
 import RoundButton from '../customs/RoundButton';
 
 export const center = {
-  lat: 40.7128, // Example: New York
-  lng: -74.006,
+  lat: -19.9167, // Belo Horizonte, Brasil
+  lng: -43.9345,
 };
 
 export const getAddressFromLatLng = (lat: number, lng: number) => {

@@ -1,6 +1,7 @@
 ﻿const db = require("../_helpers/db");
 const Property = db.Property;
 const mongoose = require("mongoose");
+const { geocodeAddress, getDefaultCoordinatesBH } = require("../services/geocoding.service");
 
 module.exports = {
   getAll,
@@ -116,6 +117,23 @@ async function getById(id) {
 }
 
 async function create(propertyParam) {
+  // Geocodificar endereço se fornecido
+  if (propertyParam.address) {
+    const geocodeResult = await geocodeAddress(propertyParam.address);
+    
+    if (geocodeResult.success) {
+      propertyParam.latitude = geocodeResult.latitude;
+      propertyParam.longitude = geocodeResult.longitude;
+      console.log(`Geocodificação bem-sucedida: ${propertyParam.address} -> ${geocodeResult.latitude}, ${geocodeResult.longitude}`);
+    } else {
+      // Usar coordenadas padrão de Belo Horizonte se a geocodificação falhar
+      const defaultCoords = getDefaultCoordinatesBH();
+      propertyParam.latitude = defaultCoords.latitude;
+      propertyParam.longitude = defaultCoords.longitude;
+      console.log(`Geocodificação falhou, usando coordenadas padrão de BH: ${defaultCoords.latitude}, ${defaultCoords.longitude}`);
+    }
+  }
+
   const property = new Property({ ...propertyParam });
 
   // var property = new Event(propertyParam);
