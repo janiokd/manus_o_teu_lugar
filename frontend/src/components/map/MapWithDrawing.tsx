@@ -4,11 +4,12 @@ import {
   GoogleMap,
   LoadScript,
   DrawingManager,
+  InfoWindow,
 } from '@react-google-maps/api';
 // @mui
-import { Box, Stack } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 // config-global
-import { MAP_API } from 'src/config-global';
+import { MAP_API, HOST_API } from 'src/config-global';
 // assets
 import MapIcon from 'src/assets/icons/MapIcon';
 import RoundButton from '../customs/RoundButton';
@@ -17,6 +18,18 @@ export const center = {
   lat: -19.9167, // Belo Horizonte, Brasil
   lng: -43.9345,
 };
+
+// Interface para dados dos imóveis no mapa
+interface PropertyMapData {
+  id: string;
+  title: string;
+  price: string;
+  address: string;
+  latitude?: number;
+  longitude?: number;
+  type: string;
+  neighborhood: string;
+}
 
 export const getAddressFromLatLng = (lat: number, lng: number) => {
   const geocoder = new google.maps.Geocoder();
@@ -31,6 +44,29 @@ export const getAddressFromLatLng = (lat: number, lng: number) => {
         } /*  else {
           reject('Geocoder failed: ' + status);
         } */
+      }
+    );
+  });
+};
+
+// Função para geocodificar endereço para coordenadas
+export const getLatLngFromAddress = (address: string) => {
+  const geocoder = new google.maps.Geocoder();
+
+  return new Promise<{ lat: number; lng: number } | null>((resolve) => {
+    geocoder.geocode(
+      { address: address },
+      (results: google.maps.GeocoderResult[] | null, status: string) => {
+        if (status === 'OK' && results && results[0]) {
+          const location = results[0].geometry.location;
+          resolve({
+            lat: location.lat(),
+            lng: location.lng(),
+          });
+        } else {
+          console.log('Geocoding failed for address:', address, 'Status:', status);
+          resolve(null);
+        }
       }
     );
   });
@@ -75,6 +111,11 @@ export default function MapWithDrawing({
 
   const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
 
+  // Estados para imóveis no mapa
+  const [properties, setProperties] = useState<PropertyMapData[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState<PropertyMapData | null>(null);
+  const [loadingProperties, setLoadingProperties] = useState(false);
+
   useEffect(() => {
     if (defaultLocation && defaultLocation?.geometry?.location) {
       setLocation({
@@ -106,6 +147,61 @@ export default function MapWithDrawing({
     } else {
       console.error('Geolocation is not supported by this browser.');
     }
+  }, []);
+
+  // Carregar imóveis da API
+  useEffect(() => {
+    const loadProperties = async () => {
+      setLoadingProperties(true);
+      try {
+        const response = await fetch(`${HOST_API}/api/property`);
+        const propertiesData = await response.json();
+        
+        // Geocodificar endereços para obter coordenadas
+        const propertiesWithCoords = await Promise.all(
+          propertiesData.map(async (property: any) => {
+            let lat = property.latitude;
+            let lng = property.longitude;
+            
+            // Se não tem coordenadas salvas, geocodificar o endereço
+            if (!lat || !lng) {
+              const coords = await getLatLngFromAddress(property.address);
+              if (coords) {
+                lat = coords.lat;
+                lng = coords.lng;
+              }
+            }
+            
+            return {
+              id: property.id,
+              title: property.title,
+              price: property.price,
+              address: property.address,
+              latitude: lat,
+              longitude: lng,
+              type: property.type,
+              neighborhood: typeof property.neighborhood === 'string' 
+                ? property.neighborhood 
+                : property.neighborhood?.name || 'N/A'
+            };
+          })
+        );
+        
+        // Filtrar apenas imóveis com coordenadas válidas
+        const validProperties = propertiesWithCoords.filter(
+          (property) => property.latitude && property.longitude
+        );
+        
+        setProperties(validProperties);
+        console.log('Imóveis carregados:', validProperties);
+      } catch (error) {
+        console.error('Erro ao carregar imóveis:', error);
+      } finally {
+        setLoadingProperties(false);
+      }
+    };
+
+    loadProperties();
   }, []);
 
   useEffect(() => {
@@ -355,6 +451,66 @@ export default function MapWithDrawing({
           />
           {/* <Marker position={location} /> */}
           {markerPosition ? <Marker position={markerPosition} draggable onDragEnd={handleMarkerDragEnd} /> : null}
+          
+          {/* Marcadores dos imóveis */}
+          {properties.map((property) => (
+            <Marker
+              key={property.id}
+              position={{
+                lat: property.latitude!,
+                lng: property.longitude!,
+              }}
+              onClick={() => setSelectedProperty(property)}
+              icon={{
+                url: 'data:image/svg+xml;base64,' + btoa(`
+                  <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 0C6.716 0 0 6.716 0 15c0 8.284 15 25 15 25s15-16.716 15-25C30 6.716 23.284 0 15 0z" fill="#FF6B35"/>
+                    <circle cx="15" cy="15" r="8" fill="white"/>
+                    <text x="15" y="19" text-anchor="middle" font-size="10" font-weight="bold" fill="#FF6B35">R$</text>
+                  </svg>
+                `),
+                scaledSize: new google.maps.Size(30, 40),
+                anchor: new google.maps.Point(15, 40),
+              }}
+            />
+          ))}
+          
+          {/* InfoWindow para mostrar detalhes do imóvel */}
+          {selectedProperty && (
+            <InfoWindow
+              position={{
+                lat: selectedProperty.latitude!,
+                lng: selectedProperty.longitude!,
+              }}
+              onCloseClick={() => setSelectedProperty(null)}
+            >
+              <Box sx={{ minWidth: 200, p: 1 }}>
+                <Typography variant="h6" sx={{ fontSize: '14px', fontWeight: 'bold', mb: 1 }}>
+                  {selectedProperty.title}
+                </Typography>
+                <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                  {selectedProperty.address}
+                </Typography>
+                <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                  Tipo: {selectedProperty.type}
+                </Typography>
+                <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                  Bairro: {selectedProperty.neighborhood}
+                </Typography>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontSize: '16px', 
+                    fontWeight: 'bold', 
+                    color: '#FF6B35',
+                    mt: 1 
+                  }}
+                >
+                  R$ {Number(selectedProperty.price).toLocaleString('pt-BR')}
+                </Typography>
+              </Box>
+            </InfoWindow>
+          )}
         </GoogleMap>
         {text && (
           <Stack
