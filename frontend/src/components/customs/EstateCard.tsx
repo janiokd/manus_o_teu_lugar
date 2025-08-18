@@ -1,10 +1,10 @@
-import { useRef } from 'react';
-import { Box, Typography, Stack, Chip } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, Stack, Chip, IconButton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLocales } from 'src/locales';
 import { PATH_PAGE } from 'src/routes/paths';
-import Carousel, { CarouselDots } from 'src/components/carousel';
 import img from 'src/assets/images/default-property.jpg';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 
 // ----------------------------------------------------------------------
 
@@ -13,67 +13,31 @@ type EstateCardProps = {
   height?: string;
 };
 
-type CarouselItemProps = {
-  item: {
-    id: string;
-    name: string;
-    image: string;
-  };
-  height?: string;
-  product: any;
-};
-
-function CarouselItem({ item, height, product }: CarouselItemProps) {
-  return (
-    <Box
-      sx={{
-        position: 'relative',
-        height: height || '250px',
-        cursor: 'pointer',
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        window.location.href = `${PATH_PAGE.buy}/${product.id}`;
-      }}
-    >
-      <Box
-        component="img"
-        alt={item.name}
-        src={item.image}
-        sx={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-        }}
-      />
-    </Box>
-  );
-}
-
 // ----------------------------------------------------------------------
 
 export default function EstateCard({ height, product }: EstateCardProps) {
   const theme = useTheme();
   const { t } = useLocales();
-  const carouselRef = useRef<Carousel | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const handlePrev = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    carouselRef.current?.slickPrev();
+  const handleCardClick = () => {
+    window.location.href = `${PATH_PAGE.buy}/${product.id}`;
   };
 
-  const handleNext = (e: React.MouseEvent) => {
+  const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    carouselRef.current?.slickNext();
+    setCurrentImageIndex((prev) => 
+      prev === 0 ? finalList.length - 1 : prev - 1
+    );
   };
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Só navega se o clique foi diretamente no card, não em elementos filhos
-    if (e.currentTarget === e.target) {
-      window.location.href = `${PATH_PAGE.buy}/${product.id}`;
-    }
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setCurrentImageIndex((prev) => 
+      prev === finalList.length - 1 ? 0 : prev + 1
+    );
   };
 
   const list = product.images && product.images.length > 0 
@@ -100,24 +64,6 @@ export default function EstateCard({ height, product }: EstateCardProps) {
     },
   ];
 
-  const carouselSettings = {
-    speed: 1000,
-    dots: true,
-    arrows: false,
-    autoplay: false,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    rtl: Boolean(theme.direction === 'rtl'),
-    ...CarouselDots({
-      sx: {
-        right: 24,
-        bottom: 24,
-        position: 'absolute',
-        color: 'white',
-      },
-    }),
-  };
-
   return (
     <Box 
       sx={{ 
@@ -130,77 +76,113 @@ export default function EstateCard({ height, product }: EstateCardProps) {
       onClick={handleCardClick}
     >
       <Box sx={{ position: 'relative' }}>
+        {/* Container do carrossel customizado */}
         <Box
           sx={{
             overflow: 'hidden',
             borderRadius: '15px',
             height: height || '250px',
+            position: 'relative',
           }}
         >
-          <Carousel ref={carouselRef} {...carouselSettings}>
-            {finalList.map((item) => (
-              <CarouselItem key={item.id} item={item} height={height} product={product} />
-            ))}
-          </Carousel>
+          {/* Imagem atual */}
+          <Box
+            component="img"
+            alt={finalList[currentImageIndex]?.name || 'Imóvel'}
+            src={finalList[currentImageIndex]?.image || img.src}
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transition: 'opacity 0.3s ease-in-out',
+            }}
+          />
           
-          {/* Setas do carrossel com interceptação completa de eventos */}
+          {/* Setas de navegação - apenas se houver múltiplas imagens */}
           {finalList.length > 1 && (
             <>
-              <Box
+              <IconButton
                 sx={{
                   position: 'absolute',
                   top: '50%',
-                  left: 16,
+                  left: 8,
                   transform: 'translateY(-50%)',
                   zIndex: 1000,
-                  backgroundColor: 'rgba(0,0,0,0.5)',
-                  borderRadius: '50%',
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  color: 'white',
+                  width: 36,
+                  height: 36,
                   '&:hover': {
-                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    backgroundColor: 'rgba(0,0,0,0.8)',
                   },
                 }}
-                onClick={handlePrev}
+                onClick={handlePrevImage}
                 onMouseDown={(e) => e.stopPropagation()}
                 onMouseUp={(e) => e.stopPropagation()}
               >
-                <Typography color="white" sx={{ fontSize: '20px', fontWeight: 'bold' }}>‹</Typography>
-              </Box>
+                <ChevronLeft fontSize="small" />
+              </IconButton>
               
-              <Box
+              <IconButton
                 sx={{
                   position: 'absolute',
                   top: '50%',
-                  right: 16,
+                  right: 8,
                   transform: 'translateY(-50%)',
                   zIndex: 1000,
-                  backgroundColor: 'rgba(0,0,0,0.5)',
-                  borderRadius: '50%',
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  color: 'white',
+                  width: 36,
+                  height: 36,
                   '&:hover': {
-                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    backgroundColor: 'rgba(0,0,0,0.8)',
                   },
                 }}
-                onClick={handleNext}
+                onClick={handleNextImage}
                 onMouseDown={(e) => e.stopPropagation()}
                 onMouseUp={(e) => e.stopPropagation()}
               >
-                <Typography color="white" sx={{ fontSize: '20px', fontWeight: 'bold' }}>›</Typography>
-              </Box>
+                <ChevronRight fontSize="small" />
+              </IconButton>
             </>
+          )}
+
+          {/* Indicadores de pontos - apenas se houver múltiplas imagens */}
+          {finalList.length > 1 && (
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 16,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                gap: 1,
+                zIndex: 999,
+              }}
+            >
+              {finalList.map((_, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: index === currentImageIndex ? 'white' : 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setCurrentImageIndex(index);
+                  }}
+                />
+              ))}
+            </Box>
           )}
         </Box>
 
+        {/* Tags de destaque */}
         <Stack
           direction="row"
           alignItems="center"
@@ -233,6 +215,7 @@ export default function EstateCard({ height, product }: EstateCardProps) {
         </Stack>
       </Box>
 
+      {/* Informações do imóvel */}
       <Stack spacing={1} sx={{ p: 1 }}>
         <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 600 }}>
           {product.title || 'Título não disponível'}
