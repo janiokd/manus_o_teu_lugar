@@ -1,71 +1,84 @@
-import React, { useRef } from 'react';
-// next
-import Link from 'next/link';
-// @mui
-import { Stack } from '@mui/system';
-import { useTheme, styled } from '@mui/material/styles';
-import { Box, CardContent, Typography } from '@mui/material';
-// assets
-import img from 'src/assets/images/img.png';
-import BedIcon from 'src/assets/icons/BedIcon';
-import CarIcon from 'src/assets/icons/CarIcon';
-import BathIcon from 'src/assets/icons/BathIcon';
-import BellIcon from 'src/assets/icons/BellIcon';
-import HeartIcon from 'src/assets/icons/HeartIcon';
-import SquareIcon from 'src/assets/icons/SquareIcon';
-import LocationIcon from 'src/assets/icons/LocationIcon';
-// @type
-import { IProduct } from 'src/@types/product';
-// routes
-import { PATH_PAGE } from 'src/routes/paths';
-// locales
+import { useRef } from 'react';
+import { Box, Typography, Stack, Chip } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useLocales } from 'src/locales';
-// components
-import Image from 'src/components/image';
-import Carousel, { CarouselDots, CarouselArrows } from 'src/components/carousel';
-//
-import RoundButton from './RoundButton';
+import { PATH_PAGE } from 'src/routes/paths';
+import Carousel, { CarouselDots } from 'src/components/carousel';
+import img from 'src/assets/images/default-property.jpg';
 
 // ----------------------------------------------------------------------
 
-const StyledOverlay = styled('div')(({ theme }) => ({
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  zIndex: 8,
-  position: 'absolute',
-  backgroundBlendMode: 'overlay',
-  backgroundImage: 'linear-gradient(to bottom, #00000000, #00000099)',
-}));
-interface EstateCardProps {
-  height?: number;
-  product: IProduct;
+type EstateCardProps = {
+  product: any;
+  height?: string;
+};
+
+type CarouselItemProps = {
+  item: {
+    id: string;
+    name: string;
+    image: string;
+  };
+  height?: string;
+  product: any;
+};
+
+function CarouselItem({ item, height, product }: CarouselItemProps) {
+  return (
+    <Box
+      sx={{
+        position: 'relative',
+        height: height || '250px',
+        cursor: 'pointer',
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        window.location.href = `${PATH_PAGE.buy}/${product.id}`;
+      }}
+    >
+      <Box
+        component="img"
+        alt={item.name}
+        src={item.image}
+        sx={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+        }}
+      />
+    </Box>
+  );
 }
 
-type ItemProps = {
-  id: string;
-  name: string;
-  image: string;
-};
+// ----------------------------------------------------------------------
 
 export default function EstateCard({ height, product }: EstateCardProps) {
   const theme = useTheme();
   const { t } = useLocales();
   const carouselRef = useRef<Carousel | null>(null);
 
-  const handlePrev = () => {
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     carouselRef.current?.slickPrev();
   };
 
-  const handleNext = () => {
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     carouselRef.current?.slickNext();
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Só navega se o clique foi diretamente no card, não em elementos filhos
+    if (e.currentTarget === e.target) {
+      window.location.href = `${PATH_PAGE.buy}/${product.id}`;
+    }
   };
 
   const list = product.images && product.images.length > 0 
     ? product.images
         .filter((imageUrl: string) => {
-          // Filtrar URLs válidas (não blob: e não vazias)
           return imageUrl && 
                  typeof imageUrl === 'string' && 
                  imageUrl.trim() !== '' &&
@@ -79,19 +92,18 @@ export default function EstateCard({ height, product }: EstateCardProps) {
         }))
     : [];
 
-  // Se não há imagens válidas, usar imagem padrão
   const finalList = list.length > 0 ? list : [
     {
-      id: '1',
+      id: '0',
       name: product.title || 'Imóvel',
-      image: img.src, // Imagem padrão se não houver imagens válidas
+      image: img.src,
     },
   ];
 
   const carouselSettings = {
     speed: 1000,
     dots: true,
-    arrows: false, // Usar setas customizadas
+    arrows: false,
     autoplay: false,
     slidesToShow: 1,
     slidesToScroll: 1,
@@ -107,7 +119,16 @@ export default function EstateCard({ height, product }: EstateCardProps) {
   };
 
   return (
-    <Box sx={{ bgcolor: 'common.white', borderRadius: '10px', p: 1.25, color: '#454545' }}>
+    <Box 
+      sx={{ 
+        bgcolor: 'common.white', 
+        borderRadius: '10px', 
+        p: 1.25, 
+        color: '#454545',
+        cursor: 'pointer',
+      }}
+      onClick={handleCardClick}
+    >
       <Box sx={{ position: 'relative' }}>
         <Box
           sx={{
@@ -122,137 +143,137 @@ export default function EstateCard({ height, product }: EstateCardProps) {
             ))}
           </Carousel>
           
-          {/* Setas do carrossel posicionadas absolutamente */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: 16,
-              transform: 'translateY(-50%)',
-              zIndex: 1000,
-              backgroundColor: 'rgba(0,0,0,0.3)',
-              borderRadius: '50%',
-              width: 40,
-              height: 40,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor: 'rgba(0,0,0,0.5)',
-              },
-            }}
-            onClick={handlePrev}
-          >
-            <Typography color="white">‹</Typography>
-          </Box>
-          
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              right: 16,
-              transform: 'translateY(-50%)',
-              zIndex: 1000,
-              backgroundColor: 'rgba(0,0,0,0.3)',
-              borderRadius: '50%',
-              width: 40,
-              height: 40,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor: 'rgba(0,0,0,0.5)',
-              },
-            }}
-            onClick={handleNext}
-          >
-            <Typography color="white">›</Typography>
-          </Box>
+          {/* Setas do carrossel com interceptação completa de eventos */}
+          {finalList.length > 1 && (
+            <>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: 16,
+                  transform: 'translateY(-50%)',
+                  zIndex: 1000,
+                  backgroundColor: 'rgba(0,0,0,0.5)',
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                  },
+                }}
+                onClick={handlePrev}
+                onMouseDown={(e) => e.stopPropagation()}
+                onMouseUp={(e) => e.stopPropagation()}
+              >
+                <Typography color="white" sx={{ fontSize: '20px', fontWeight: 'bold' }}>‹</Typography>
+              </Box>
+              
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  right: 16,
+                  transform: 'translateY(-50%)',
+                  zIndex: 1000,
+                  backgroundColor: 'rgba(0,0,0,0.5)',
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                  },
+                }}
+                onClick={handleNext}
+                onMouseDown={(e) => e.stopPropagation()}
+                onMouseUp={(e) => e.stopPropagation()}
+              >
+                <Typography color="white" sx={{ fontSize: '20px', fontWeight: 'bold' }}>›</Typography>
+              </Box>
+            </>
+          )}
         </Box>
 
-        <Stack direction="row" spacing={1} sx={{ position: 'absolute', top: 10, left: 10 }}>
-          <RoundButton variant="contained" color="secondary" size="small">
-            <Typography variant="overline" sx={{ textTransform: 'none' }}>
-              {t(`card.featured`)}
-            </Typography>
-          </RoundButton>
-          <RoundButton variant="contained" color="info" size="small">
-            <Typography variant="overline" sx={{ textTransform: 'none' }}>
-              {t(`card.buy`)}
-            </Typography>
-          </RoundButton>
-        </Stack>
-
         <Stack
-          spacing={1}
           direction="row"
           alignItems="center"
-          sx={{ position: 'absolute', bottom: 10, left: 15, color: 'white' }}
+          spacing={1}
+          sx={{
+            position: 'absolute',
+            top: 16,
+            left: 16,
+            zIndex: 9,
+          }}
         >
-          <HeartIcon />
-          <BellIcon />
-          <Typography variant="overline">{t(`card.buy`)}</Typography>
+          <Chip
+            variant="filled"
+            size="small"
+            label="Destaque"
+            sx={{
+              color: 'common.white',
+              bgcolor: 'warning.main',
+            }}
+          />
+          <Chip
+            variant="filled"
+            size="small"
+            label={product.type || 'Comprar'}
+            sx={{
+              color: 'common.white',
+              bgcolor: 'info.main',
+            }}
+          />
         </Stack>
       </Box>
 
-      <Stack spacing={1.5} textAlign="start" sx={{ mt: 2 }}>
-        <Typography variant="h4" color="primary">
-          {product.title}
+      <Stack spacing={1} sx={{ p: 1 }}>
+        <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 600 }}>
+          {product.title || 'Título não disponível'}
         </Typography>
-        <Stack direction="row" justifyContent="flex-start" alignItems="start" spacing={2}>
-          <LocationIcon />
-          <Typography variant="body2" sx={{ maxWidth: '230px', color: 'text.secondary' }}>
-            {product.address}
-          </Typography>
-        </Stack>
 
-        <Stack direction="row" justifyContent="flex-start" spacing={2}>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <BedIcon />
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {`${product.features?.bedrooms || 0} ${t(`card.bedrooms`)}`}
+        <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '14px' }}>
+          {product.address || 'Endereço não disponível'}
+        </Typography>
+
+        <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Typography variant="caption" sx={{ fontSize: '12px' }}>
+              {product.features?.bedrooms || 0} Dormitórios
             </Typography>
           </Stack>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <BathIcon />
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {`${product.features?.bathroom || 0} ${t(`card.suite`)}`}
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Typography variant="caption" sx={{ fontSize: '12px' }}>
+              {product.features?.bathrooms || 0} Suíte
             </Typography>
           </Stack>
         </Stack>
 
-        <Stack direction="row" justifyContent="flex-start" spacing={2}>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <CarIcon />
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {`${product.features?.vacancies || 0} ${t(`card.vacancies`)}`}
+        <Stack direction="row" spacing={2}>
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Typography variant="caption" sx={{ fontSize: '12px' }}>
+              {product.features?.parking || 0} Vagas
             </Typography>
           </Stack>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <SquareIcon />
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {`${product.features?.area || 0}m² (${t(`card.usable_area`)})`}
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Typography variant="caption" sx={{ fontSize: '12px' }}>
+              {product.features?.area || 0}m² (Área útil)
             </Typography>
           </Stack>
         </Stack>
 
-        <Stack
-          spacing={1}
-          direction="row"
-          alignItems="center"
-          justifyContent="flex-start"
-          sx={{ pt: 2 }}
-        >
-          <Typography variant="subtitle1" color="primary">
-            {t(`card.from`)}
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 2 }}>
+          <Typography variant="caption" sx={{ fontSize: '12px' }}>
+            A partir de
           </Typography>
-          <Typography variant="subtitle1" color="primary">
-            R$
-          </Typography>
-          <Typography variant="h3" color="primary">
-            {product.price}
+          <Typography variant="h6" sx={{ fontSize: '14px', fontWeight: 600 }}>
+            R$ {product.price ? Number(product.price).toLocaleString('pt-BR') : '0'}
           </Typography>
         </Stack>
       </Stack>
@@ -260,38 +281,3 @@ export default function EstateCard({ height, product }: EstateCardProps) {
   );
 }
 
-type CarouselItemProps = {
-  item: ItemProps;
-  height?: number;
-  product: IProduct;
-};
-
-function CarouselItem({ item, height, product }: CarouselItemProps) {
-  const { image, name } = item;
-
-  return (
-    <Box sx={{ position: 'relative' }}>
-      <CardContent
-        sx={{
-          left: 0,
-          bottom: 0,
-          zIndex: 9,
-          // maxWidth: '80%',
-          position: 'absolute',
-          color: 'common.white',
-        }}
-      />
-      <StyledOverlay />
-      <Link href={`${PATH_PAGE.buy}/${product.id}`}>
-        <Image
-          alt={name}
-          src={image}
-          sx={{
-            height: height || 250,
-            cursor: 'pointer',
-          }}
-        />
-      </Link>
-    </Box>
-  );
-}

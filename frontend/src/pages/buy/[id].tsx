@@ -80,24 +80,52 @@ export default function PropertyDetailPage() {
   const loadProperty = async (propertyId: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`${HOST_API}/api/property/${propertyId}`);
       
+      // Primeiro tentar buscar por ID específico
+      let response = await fetch(`${HOST_API}/api/property/${propertyId}`);
+      
+      // Se não encontrar por ID, buscar todos e filtrar
       if (!response.ok) {
+        console.log('Tentando buscar todos os imóveis...');
+        const allPropertiesResponse = await fetch(`${HOST_API}/api/property/get`);
+        if (allPropertiesResponse.ok) {
+          const allProperties = await allPropertiesResponse.json();
+          console.log('Todos os imóveis:', allProperties);
+          
+          const foundProperty = allProperties.find((prop: any) => 
+            prop._id === propertyId || 
+            prop.id === propertyId ||
+            prop._id?.toString() === propertyId ||
+            prop.id?.toString() === propertyId
+          );
+          
+          if (foundProperty) {
+            console.log('Imóvel encontrado:', foundProperty);
+            const normalizedProperty = {
+              ...foundProperty,
+              price: foundProperty.price?.toString() || '0',
+              features: foundProperty.features || {},
+              type: foundProperty.type || 'Imóvel',
+              description: foundProperty.description || 'Descrição não disponível',
+            };
+            
+            setProperty(normalizedProperty);
+            setLoading(false);
+            return;
+          }
+        }
         throw new Error('Imóvel não encontrado');
       }
       
       const propertyData = await response.json();
+      console.log('Dados do imóvel carregados:', propertyData);
       
       // Normalizar dados para compatibilidade
       const normalizedProperty = {
         ...propertyData,
-        // Garantir que price seja string
         price: propertyData.price?.toString() || '0',
-        // Garantir que features existe
         features: propertyData.features || {},
-        // Garantir que type existe
         type: propertyData.type || 'Imóvel',
-        // Garantir que description existe
         description: propertyData.description || 'Descrição não disponível',
       };
       
