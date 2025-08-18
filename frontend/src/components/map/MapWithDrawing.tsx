@@ -113,8 +113,25 @@ export default function MapWithDrawing({
 
   // Estados para imóveis no mapa
   const [properties, setProperties] = useState<PropertyMapData[]>([]);
+  const [allProperties, setAllProperties] = useState<PropertyMapData[]>([]); // Backup de todos os imóveis
   const [selectedProperty, setSelectedProperty] = useState<PropertyMapData | null>(null);
   const [loadingProperties, setLoadingProperties] = useState(false);
+
+  // Função para resetar filtros e mostrar todos os imóveis
+  const resetFilters = () => {
+    setProperties(allProperties);
+    // Limpar todas as formas desenhadas
+    shapes.forEach(({ shape }) => {
+      if (shape && shape.setMap) {
+        shape.setMap(null);
+      }
+    });
+    setShapes([]);
+    // Voltar para o centro de Belo Horizonte
+    setLocation(center);
+    setZoomLevel(8);
+    console.log('Filtros resetados, mostrando todos os imóveis');
+  };
 
   useEffect(() => {
     if (defaultLocation && defaultLocation?.geometry?.location) {
@@ -193,6 +210,7 @@ export default function MapWithDrawing({
         );
         
         setProperties(validProperties);
+        setAllProperties(validProperties); // Salvar backup
         console.log('Imóveis carregados:', validProperties);
       } catch (error) {
         console.error('Erro ao carregar imóveis:', error);
@@ -306,15 +324,82 @@ export default function MapWithDrawing({
     }
   };
 
+  // Função para verificar se um ponto está dentro de um polígono
+  const isPointInPolygon = (point: { lat: number; lng: number }, polygon: google.maps.Polygon) => {
+    const path = polygon.getPath();
+    const latLng = new google.maps.LatLng(point.lat, point.lng);
+    return google.maps.geometry.poly.containsLocation(latLng, polygon);
+  };
+
+  // Função para filtrar imóveis por área desenhada
+  const filterPropertiesByArea = (shape: any, shapeType: string) => {
+    if (!allProperties.length) return;
+
+    let filteredProperties: PropertyMapData[] = [];
+
+    if (shapeType === 'polygon' && shape instanceof google.maps.Polygon) {
+      // Filtrar imóveis dentro do polígono
+      filteredProperties = allProperties.filter(property => {
+        if (!property.latitude || !property.longitude) return false;
+        return isPointInPolygon(
+          { lat: property.latitude, lng: property.longitude },
+          shape
+        );
+      });
+    } else if (shapeType === 'rectangle' && shape instanceof google.maps.Rectangle) {
+      // Filtrar imóveis dentro do retângulo
+      const bounds = shape.getBounds();
+      if (bounds) {
+        filteredProperties = allProperties.filter(property => {
+          if (!property.latitude || !property.longitude) return false;
+          const point = new google.maps.LatLng(property.latitude, property.longitude);
+          return bounds.contains(point);
+        });
+      }
+    } else if (shapeType === 'circle' && shape instanceof google.maps.Circle) {
+      // Filtrar imóveis dentro do círculo
+      const center = shape.getCenter();
+      const radius = shape.getRadius();
+      if (center) {
+        filteredProperties = allProperties.filter(property => {
+          if (!property.latitude || !property.longitude) return false;
+          const point = new google.maps.LatLng(property.latitude, property.longitude);
+          const distance = google.maps.geometry.spherical.computeDistanceBetween(center, point);
+          return distance <= radius;
+        });
+      }
+    }
+
+    console.log(`Imóveis encontrados na área: ${filteredProperties.length}`, filteredProperties);
+    
+    // Atualizar estado para mostrar apenas imóveis filtrados
+    setProperties(filteredProperties);
+    
+    // Se encontrou imóveis, centralizar mapa na primeira propriedade
+    if (filteredProperties.length > 0) {
+      const firstProperty = filteredProperties[0];
+      if (firstProperty.latitude && firstProperty.longitude) {
+        setLocation({
+          lat: firstProperty.latitude,
+          lng: firstProperty.longitude
+        });
+        setZoomLevel(13); // Zoom mais próximo para ver os imóveis
+      }
+    }
+  };
+
   const onOverlayComplete = (event: google.maps.drawing.OverlayCompleteEvent) => {
     const newShape = event.overlay;
     const shapeType = event.type;
 
     // Store the drawn shape
     setShapes((prevShapes) => [...prevShapes, { type: shapeType, shape: newShape }]);
-    console.log('shapes:', shapes);
-
+    
+    // Filtrar imóveis pela área desenhada
+    filterPropertiesByArea(newShape, shapeType);
+    
     console.log('Shape Drawn:', shapeType, newShape);
+    console.log('Filtering properties by drawn area...');
   };
 
   const onShapeComplete = async (
@@ -411,7 +496,7 @@ export default function MapWithDrawing({
 
 
   return (
-    <LoadScript googleMapsApiKey={MAP_API || ''} libraries={['drawing', 'places']}>
+    <LoadScript googleMapsApiKey={MAP_API || ''} libraries={['drawing', 'places', 'geometry']}>
       <Box
         sx={{
           bgcolor: 'white',
@@ -516,6 +601,7 @@ export default function MapWithDrawing({
           <Stack
             alignItems="center"
             justifyContent="flex-end"
+            spacing={1}
             sx={{
               top: '30px',
               right: '30px',
@@ -532,6 +618,21 @@ export default function MapWithDrawing({
             >
               {text}
             </RoundButton>
+            
+            {shapes.length > 0 && (
+              <RoundButton
+                size="medium"
+                color="primary"
+                variant="outlined"
+                onClick={resetFilters}
+                sx={{ 
+                  backgroundColor: 'white',
+                  '&:hover': { backgroundColor: '#f5f5f5' }
+                }}
+              >
+                Limpar Filtros ({properties.length} imóveis)
+              </RoundButton>
+            )}
           </Stack>
         )}
       </Box>
