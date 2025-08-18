@@ -91,7 +91,7 @@ export default function EstateCard({ height, product }: EstateCardProps) {
   const carouselSettings = {
     speed: 1000,
     dots: true,
-    arrows: true,
+    arrows: false, // Usar setas customizadas
     autoplay: false,
     slidesToShow: 1,
     slidesToScroll: 1,
