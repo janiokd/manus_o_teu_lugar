@@ -56,8 +56,8 @@ interface Props extends StackProps {
   filled?: boolean;
   children?: React.ReactNode;
   icon?: IconifyProps; // Right icon
-  onNext?: VoidFunction;
-  onPrevious?: VoidFunction;
+  onNext?: (e?: React.MouseEvent) => void;
+  onPrevious?: (e?: React.MouseEvent) => void;
   leftButtonProps?: IconButtonProps;
   rightButtonProps?: IconButtonProps;
 }
@@ -87,7 +87,7 @@ export default function CarouselArrows({
           filled={filled}
           shape={shape}
           hasChildren={!!children}
-          onClick={onPrevious}
+          onClick={(e) => onPrevious?.(e)}
           {...leftButtonProps}
           sx={{
             left: 16,
@@ -103,7 +103,7 @@ export default function CarouselArrows({
           filled={filled}
           shape={shape}
           hasChildren={!!children}
-          onClick={onNext}
+          onClick={(e) => onNext?.(e)}
           {...rightButtonProps}
           sx={{
             right: 16,
@@ -118,11 +118,11 @@ export default function CarouselArrows({
 
   return (
     <Stack direction="row" alignItems="center" display="inline-flex" sx={sx} {...other}>
-      <StyledIconButton filled={filled} shape={shape} onClick={onPrevious} {...leftButtonProps}>
+      <StyledIconButton filled={filled} shape={shape} onClick={(e) => onPrevious?.(e)} {...leftButtonProps}>
         <LeftIcon icon={icon} isRTL={isRTL} />
       </StyledIconButton>
 
-      <StyledIconButton filled={filled} shape={shape} onClick={onNext} {...rightButtonProps}>
+      <StyledIconButton filled={filled} shape={shape} onClick={(e) => onNext?.(e)} {...rightButtonProps}>
         <RightIcon icon={icon} isRTL={isRTL} />
       </StyledIconButton>
     </Stack>

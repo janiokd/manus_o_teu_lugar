@@ -54,11 +54,15 @@ export default function EstateCard({ height, product }: EstateCardProps) {
   const { t } = useLocales();
   const carouselRef = useRef<Carousel | null>(null);
 
-  const handlePrev = () => {
+  const handlePrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
     carouselRef.current?.slickPrev();
   };
 
-  const handleNext = () => {
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
     carouselRef.current?.slickNext();
   };
 
