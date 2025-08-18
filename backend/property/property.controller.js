@@ -4,9 +4,9 @@ const propertyService = require('./property.service');
 
 // routes
 router.post('/register', register);
+router.get('/map-data', getMapData);
 router.get('/', getAll);
 router.get('/get', get);
-router.get('/map-data', getMapData);
 router.get('/current', getCurrent);
 router.get('/:id', getById);
 router.put('/:id', update);
