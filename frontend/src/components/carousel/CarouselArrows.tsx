@@ -42,10 +42,14 @@ const StyledIconButton = styled(IconButton, {
 
   }),
   ...(hasChildren && {
-    zIndex: 9,
+    zIndex: 999, // Aumentar z-index para ficar acima de tudo
     top: '50%',
     position: 'absolute',
     marginTop: theme.spacing(-2.5),
+    backgroundColor: alpha(theme.palette.grey[900], 0.3), // Adicionar background
+    '&:hover': {
+      backgroundColor: '#45454590',
+    },
   }),
 }));
 
