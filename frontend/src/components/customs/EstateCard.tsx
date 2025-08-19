@@ -22,7 +22,7 @@ export default function EstateCard({ height, product }: EstateCardProps) {
 
   const handleCardClick = () => {
     const propertyId = product._id || product.id;
-    window.location.href = `${PATH_PAGE.buy}/${propertyId}`;
+    window.location.href = `/property/${propertyId}`;
   };
 
   const handlePrevImage = (e: React.MouseEvent) => {
