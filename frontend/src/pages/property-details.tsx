@@ -438,3 +438,4 @@ export default function PropertyDetailPage() {
   );
 }
 
+// Force rebuild Tue Aug 19 06:31:09 EDT 2025
