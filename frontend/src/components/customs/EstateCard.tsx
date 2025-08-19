@@ -229,12 +229,12 @@ export default function EstateCard({ height, product }: EstateCardProps) {
         <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
           <Stack direction="row" alignItems="center" spacing={0.5}>
             <Typography variant="caption" sx={{ fontSize: '12px' }}>
-              {product.features?.bedrooms || 0} Dormitórios
+              {product.bedrooms || product.number_of_bedrooms || 0} Dormitórios
             </Typography>
           </Stack>
           <Stack direction="row" alignItems="center" spacing={0.5}>
             <Typography variant="caption" sx={{ fontSize: '12px' }}>
-              {product.features?.bathrooms || 0} Suíte
+              {product.suites || product.number_of_suites || 0} Suíte
             </Typography>
           </Stack>
         </Stack>
@@ -242,12 +242,12 @@ export default function EstateCard({ height, product }: EstateCardProps) {
         <Stack direction="row" spacing={2}>
           <Stack direction="row" alignItems="center" spacing={0.5}>
             <Typography variant="caption" sx={{ fontSize: '12px' }}>
-              {product.features?.parking || 0} Vagas
+              {product.parking_spaces || product.number_of_parking_spaces || 0} Vagas
             </Typography>
           </Stack>
           <Stack direction="row" alignItems="center" spacing={0.5}>
             <Typography variant="caption" sx={{ fontSize: '12px' }}>
-              {product.features?.area || 0}m² (Área útil)
+              {product.area || product.total_area || 0}m² (Área útil)
             </Typography>
           </Stack>
         </Stack>
