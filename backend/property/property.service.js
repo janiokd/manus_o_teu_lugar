@@ -15,7 +15,37 @@ module.exports = {
 };
 
 async function getAll() {
-  return await Property.find();
+  const properties = await Property.find();
+  return properties.map(property => normalizeProperty(property));
+}
+
+// Função para normalizar dados dos imóveis
+function normalizeProperty(property) {
+  if (!property) return property;
+  
+  // Criar cópia do objeto
+  const normalized = { ...property };
+  
+  // Normalizar features se existir estrutura complexa
+  if (normalized.features) {
+    const features = normalized.features;
+    
+    // Mapear campos longos para curtos
+    if (features.number_of_bedrooms && !features.bedrooms) {
+      features.bedrooms = parseInt(features.number_of_bedrooms) || 0;
+    }
+    if (features.number_of_bathrooms && !features.bathroom) {
+      features.bathroom = parseInt(features.number_of_bathrooms) || 0;
+    }
+    if (features.number_of_car_in_garage && !features.vacancies) {
+      features.vacancies = parseInt(features.number_of_car_in_garage) || 0;
+    }
+    if (features.area && typeof features.area === 'string') {
+      features.area = parseInt(features.area) || 0;
+    }
+  }
+  
+  return normalized;
 }
 
 async function get(params) {
@@ -109,11 +139,15 @@ async function get(params) {
 
   if (params.limit) aggregate.push({ $limit: parseInt(params.limit) });
 
-  return await Property.aggregate(aggregate);
+  const results = await Property.aggregate(aggregate);
+  
+  // Normalizar todos os resultados
+  return results.map(property => normalizeProperty(property));
 }
 
 async function getById(id) {
-  return await Property.findById(id);
+  const property = await Property.findById(id);
+  return normalizeProperty(property);
 }
 
 async function create(propertyParam) {
