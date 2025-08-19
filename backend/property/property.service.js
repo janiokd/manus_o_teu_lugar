@@ -24,25 +24,29 @@ function normalizeProperty(property) {
   if (!property) return property;
   
   // Criar cópia do objeto
-  const normalized = { ...property };
+  const normalized = { ...property.toObject ? property.toObject() : property };
   
-  // Normalizar features se existir estrutura complexa
-  if (normalized.features) {
-    const features = normalized.features;
+  // Mapear dados das features para campos diretos
+  if (normalized.features && normalized.features.private_area) {
+    const privateArea = normalized.features.private_area;
     
-    // Mapear campos longos para curtos
-    if (features.number_of_bedrooms && !features.bedrooms) {
-      features.bedrooms = parseInt(features.number_of_bedrooms) || 0;
-    }
-    if (features.number_of_bathrooms && !features.bathroom) {
-      features.bathroom = parseInt(features.number_of_bathrooms) || 0;
-    }
-    if (features.number_of_car_in_garage && !features.vacancies) {
-      features.vacancies = parseInt(features.number_of_car_in_garage) || 0;
-    }
-    if (features.area && typeof features.area === 'string') {
-      features.area = parseInt(features.area) || 0;
-    }
+    // Mapear campos para estrutura mais simples
+    normalized.bedrooms = parseInt(privateArea.number_of_bedrooms) || 0;
+    normalized.number_of_bedrooms = parseInt(privateArea.number_of_bedrooms) || 0;
+    
+    normalized.suites = parseInt(privateArea.number_of_bathrooms) || 0;
+    normalized.number_of_suites = parseInt(privateArea.number_of_bathrooms) || 0;
+    
+    normalized.parking_spaces = parseInt(privateArea.number_of_car_in_garage) || 0;
+    normalized.number_of_parking_spaces = parseInt(privateArea.number_of_car_in_garage) || 0;
+    
+    normalized.area = parseInt(privateArea.area) || 0;
+    normalized.total_area = parseInt(privateArea.area) || 0;
+  }
+  
+  // Garantir que images seja um array
+  if (!normalized.images) {
+    normalized.images = [];
   }
   
   return normalized;
