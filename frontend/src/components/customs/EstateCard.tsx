@@ -21,7 +21,8 @@ export default function EstateCard({ height, product }: EstateCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const handleCardClick = () => {
-    window.location.href = `${PATH_PAGE.buy}/${product.id}`;
+    const propertyId = product._id || product.id;
+    window.location.href = `${PATH_PAGE.buy}/${propertyId}`;
   };
 
   const handlePrevImage = (e: React.MouseEvent) => {
